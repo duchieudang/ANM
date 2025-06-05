@@ -13,9 +13,10 @@
 		<div class="card shadow p-4">
 			<h2 class="text-center mb-4">Kết quả ký và xác thực DSA</h2>
 
-			<div class="mb-3">
+				<div class="mb-3">
 				<label class="form-label"><strong>Văn bản:</strong></label>
-				<pre class="bg-light border p-3">${message}</pre>
+				<pre class="bg-light border p-3"
+					style="max-height: 300px; overflow: auto; white-space: pre-wrap;">${message}</pre>
 			</div>
 
 			<!-- Hiển thị các giá trị p, q, g, x, y, k -->

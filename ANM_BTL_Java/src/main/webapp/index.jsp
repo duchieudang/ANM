@@ -15,7 +15,6 @@
 	}
 	window.onload = toggleForm;
 
-	// Hàm kiểm tra số nguyên tố
 	function isPrime(num) {
 		if (num < 2) return false;
 		if (num === 2) return true;
@@ -27,7 +26,6 @@
 		return true;
 	}
 
-	// Sinh số nguyên tố ngẫu nhiên trong khoảng [min, max]
 	function randomPrime(min, max) {
 		let prime = 0;
 		let attempts = 0;
@@ -42,7 +40,6 @@
 		return prime;
 	}
 
-	// Hàm tính mod lũy thừa nhanh
 	function modExp(base, exp, mod) {
 		let result = 1;
 		base = base % mod;
@@ -54,7 +51,6 @@
 		return result;
 	}
 
-	// Hàm sinh p và q thỏa (p-1) % q = 0, p, q là nguyên tố, với q < p
 	function generatePQ(minDigits = 6) {
 		const min = Math.pow(10, minDigits - 1);
 		const max = Math.pow(10, minDigits) * 10;
@@ -81,33 +77,59 @@
 
 		return { p, q };
 	}
+	function generatePQ(minDigits = 6) {
+		const min = Math.pow(10, minDigits - 1);
+		const max = Math.pow(10, minDigits) * 10;
+		let q, p;
+		let attempts = 0;
 
-	// Hàm sinh x, k trong [1, q-1] và g theo công thức DSA
+		do {
+			q = randomPrime(min, max);
+			let found = false;
+			for (let k = 2; k <= 10; k++) {
+				const candidateP = q * k + 1;
+				if (candidateP >= min && candidateP <= max && isPrime(candidateP)) {
+					p = candidateP;
+					found = true;
+					break;
+				}
+			}
+			attempts++;
+			if (attempts > 1000) {
+				alert("Không tìm được p, q thỏa mãn trong phạm vi cho phép. Vui lòng thử lại.");
+				return null;
+			}
+		} while (!p);
+
+		return { p, q };
+	}
 	function generateXGK(p, q) {
 		let x = Math.floor(Math.random() * (q - 1)) + 1;
 		let k = Math.floor(Math.random() * (q - 1)) + 1;
 
-		let h = 2;
-		let g = 1;
-		while (h < p - 1) {
+		let h, g = 1;
+		let attempts = 0;
+		do {
+			h = Math.floor(Math.random() * (q - 2)) + 2; // h ∈ [2, q-1]
 			g = modExp(h, (p - 1) / q, p);
-			if (g > 1) break;
-			h++;
+			attempts++;
+		} while (g <= 1 && attempts < 1000);
+
+		if (g <= 1) {
+			alert("Không thể sinh giá trị g hợp lệ. Vui lòng thử lại.");
+			return null;
 		}
 
-		return { x, g, k };
+		return { x, g, k, h };
 	}
 
-	// Hàm tổng hợp sinh p, q, x, g, k cho form văn bản
-
-	// Hàm tổng hợp sinh p, q, x, g, k cho form văn bản
 	function generatePQXGKText() {
 		const pq = generatePQ(6);
 		if (!pq) return;
 
 		const { p, q } = pq;
-		const { x, g, k } = generateXGK(p, q);
-		const y = modExp(g, x, p); // Khóa công khai
+		const { x, g, k, h } = generateXGK(p, q);
+		const y = modExp(g, x, p);
 
 		document.getElementById("inputPText").value = p;
 		document.getElementById("inputQText").value = q;
@@ -115,16 +137,33 @@
 		document.getElementById("inputGText").value = g;
 		document.getElementById("inputKText").value = k;
 		document.getElementById("inputYText").value = y;
+		document.getElementById("inputHText").value = h;
+	}
+	function clearTextForm() {
+		const ids = [
+			"inputPText", "inputQText", "inputXText", "inputHText",
+			"inputGText", "inputYText", "inputKText"
+		];
+		ids.forEach(id => document.getElementById(id).value = '');
+		document.querySelector('textarea[name="message"]').value = '';
 	}
 
-	// Hàm tổng hợp sinh p, q, x, g, k cho form file
+	function clearFileForm() {
+		const ids = [
+			"inputPFile", "inputQFile", "inputXFile", "inputHFile",
+			"inputGFile", "inputYFile", "inputKFile"
+		];
+		ids.forEach(id => document.getElementById(id).value = '');
+		document.querySelector('input[name="file"]').value = '';
+	}
+
 	function generatePQXGKFile() {
 		const pq = generatePQ(6);
 		if (!pq) return;
 
 		const { p, q } = pq;
-		const { x, g, k } = generateXGK(p, q);
-		const y = modExp(g, x, p); // Khóa công khai
+		const { x, g, k, h } = generateXGK(p, q);
+		const y = modExp(g, x, p);
 
 		document.getElementById("inputPFile").value = p;
 		document.getElementById("inputQFile").value = q;
@@ -132,13 +171,95 @@
 		document.getElementById("inputGFile").value = g;
 		document.getElementById("inputKFile").value = k;
 		document.getElementById("inputYFile").value = y;
+		document.getElementById("inputHFile").value = h;
 	}
 
+	function autoFillParametersText() {
+		let p = parseInt(document.getElementById("inputPText").value) || null;
+		let q = parseInt(document.getElementById("inputQText").value) || null;
+		let x = parseInt(document.getElementById("inputXText").value) || Math.floor(Math.random() * 1000) + 1;
+		if (!q || !isPrime(q)) {
+			const randomNumber = Math.floor(Math.random() * 6) + 1;
+			const pq = generatePQ(randomNumber);
+		    if (!pq) return;
+		    q = pq.q;
+		    p = pq.p;
+		} else {
+		    // Nếu q là nguyên tố hợp lệ, tìm p sao cho p - 1 chia hết cho q và p là số nguyên tố
+		    for (let i = 2; i < 1000; i++) { // Giới hạn để tránh vòng lặp vô hạn
+		        let candidateP = q * i + 1;
+		        if (isPrime(candidateP)) {
+		            p = candidateP;
+		            break;
+		        }
+		    }
+		}
+
+		
+		if (!document.getElementById("inputXText").value) {
+			document.getElementById("inputXText").value = x;
+		}
+
+		const gkResult = generateXGK(p, q);
+		if (!gkResult) return;
+
+		const { g, k, h } = gkResult;
+		const y = modExp(g, x, p);
+
+		document.getElementById("inputPText").value = p;
+		document.getElementById("inputQText").value = q;
+		document.getElementById("inputGText").value = g;
+		document.getElementById("inputKText").value = k;
+		document.getElementById("inputYText").value = y;
+		document.getElementById("inputHText").value = h;
+	}
+
+
+	function autoFillParametersFile() {
+		let p = parseInt(document.getElementById("inputPFile").value) || null;
+		let q = parseInt(document.getElementById("inputQFile").value) || null;
+		let x = parseInt(document.getElementById("inputXFile").value) || Math.floor(Math.random() * 1000) + 1;
+		let g, y, k, h;
+        
+		if (!q || !isPrime(q)) {
+			const randomNumber = Math.floor(Math.random() * 6) + 1;
+			const pq = generatePQ(randomNumber);
+		    if (!pq) return;
+		    q = pq.q;
+		    p = pq.p;
+		} else {
+		    // Nếu q là nguyên tố hợp lệ, tìm p sao cho p - 1 chia hết cho q và p là số nguyên tố
+		    for (let i = 2; i < 1000; i++) { // Giới hạn để tránh vòng lặp vô hạn
+		        let candidateP = q * i + 1;
+		        if (isPrime(candidateP)) {
+		            p = candidateP;
+		            break;
+		        }
+		    }
+		}
+
+		if (!document.getElementById("inputXFile").value) {
+			document.getElementById("inputXFile").value = x;
+		}
+
+		const gkResult = generateXGK(p, q);
+		if (!gkResult) return;
+		g = gkResult.g;
+		k = gkResult.k;
+		h = gkResult.h;
+		y = modExp(g, x, p);
+
+		document.getElementById("inputPFile").value = p;
+		document.getElementById("inputQFile").value = q;
+		document.getElementById("inputGFile").value = g;
+		document.getElementById("inputKFile").value = k;
+		document.getElementById("inputYFile").value = y;
+		document.getElementById("inputHFile").value = h;
+	}
 </script>
 </head>
 <body class="bg-light">
 	<div class="container mt-5">
-
 		<h2 class="text-center mb-4">Hệ thống ký số DSA</h2>
 
 		<div class="card shadow p-4 mb-4">
@@ -162,40 +283,60 @@
 			<h5 class="mb-3">Nhập văn bản cần ký:</h5>
 			<form action="sign" method="post">
 				<div class="row mb-3">
-					<div class="col-md-2">
-						<label for="inputPText" class="form-label">Số nguyên tố p
-							(ít nhất 6 chữ số):</label> <input type="number" name="p" id="inputPText"
-							class="form-control" required minlength="6" min="100000">
+					<div class="row">
+						
+				
+						<div class="col-md-3">
+							<label for="inputXText" class="form-label">x (private
+								key):</label> <input type="number" name="x" id="inputXText"
+								class="form-control" min="1">
+						</div>
+						<div class="col-md-3">
+							<label for="inputQText" class="form-label">Số nguyên tố
+								q:</label> <input type="number" name="q" id="inputQText"
+								class="form-control" minlength="6" min="0"   >
+						</div>
+						<div class="col-md-3">
+							<label for="inputPText" class="form-label">Số nguyên tố
+								p:</label> <input type="number" name="p" id="inputPText"
+								class="form-control" minlength="6" min="0" readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputHText" class="form-label">h (tạo g):</label> <input
+								type="number" name="h" id="inputHText" class="form-control"
+								readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputGText" class="form-label">g:</label> <input
+								type="number" name="g" id="inputGText" class="form-control"
+								min="1" readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputYText" class="form-label">y = g^x mod p:</label>
+							<input type="number" name="y" id="inputYText"
+								class="form-control" min="1" readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputKText" class="form-label">k:</label> <input
+								type="number" name="k" id="inputKText" class="form-control"
+								min="1" readonly>
+						</div>
 					</div>
-					<div class="col-md-2">
-						<label for="inputQText" class="form-label">Số nguyên tố q
-							sao cho (p-1) % q = 0:</label> <input type="number" name="q"
-							id="inputQText" class="form-control" required minlength="6"
-							min="100000">
-					</div>
-					<div class="col-md-2">
-						<label for="inputXText" class="form-label">Số nguyên x (1
-							<= x <= q-1):</label> <input type="number" name="x" id="inputXText"
-							class="form-control" required min="1">
-					</div>
-					<div class="col-md-2">
-						<label for="inputGText" class="form-label">Số nguyên g:</label> <input
-							type="number" name="g" id="inputGText" class="form-control"
-							required min="1"  required min="1">
-					</div>
-					<div class="col-md-2">
-						<label for="inputYText" class="form-label">Khóa công khai
-							y = g^x mod p:</label> <input type="number" name="y" id="inputYText"
-							class="form-control"  required min="1">
-					</div>
-					<div class="col-md-2">
-						<label for="inputKText" class="form-label">Số nguyên k (1
-							<= k <= q-1):</label> <input type="number" name="k" id="inputKText"
-							class="form-control" required min="1">
-					</div>
-					<div class="col-md-2 d-flex align-items-end">
-						<button type="button" class="btn btn-primary w-100"
-							onclick="generatePQXGKText()">Sinh ngẫu nhiên</button>
+					<div class="row mt-3">
+						<div class="col-md-2 ">
+							<button type="button" class="btn btn-warning w-100"
+								onclick="autoFillParametersText()">Tự động hoàn tất</button>
+						</div>
+						<div class="col-md-2">
+							<button type="button" class="btn btn-primary w-100"
+								onclick="generatePQXGKText()">Sinh ngẫu nhiên</button>
+						</div>
+						<div class="col-md-2">
+							<button type="button" class="btn btn-danger w-100"
+								onclick="clearTextForm()">Xóa tất cả</button>
+						</div>
+
+
 					</div>
 				</div>
 				<div class="mb-3">
@@ -211,40 +352,60 @@
 			<h5 class="mb-3">Chọn file cần ký:</h5>
 			<form action="upload" method="post" enctype="multipart/form-data">
 				<div class="row mb-3">
-					<div class="col-md-2">
-						<label for="inputPFile" class="form-label">Số nguyên tố p
-							(ít nhất 6 chữ số):</label> <input type="number" name="p" id="inputPFile"
-							class="form-control" required minlength="6" min="100000">
+					<div class="row">
+						
+						<div class="col-md-3">
+							<label for="inputXFile" class="form-label">x (private
+								key):</label> <input type="number" name="x" id="inputXFile"
+								class="form-control" min="1">
+						</div>
+						<div class="col-md-3">
+							<label for="inputQFile" class="form-label">Số nguyên tố
+								q:</label> <input type="number" name="q" id="inputQFile"
+								class="form-control" minlength="6" min="0">
+						</div>
+						<div class="col-md-3">
+							<label for="inputPFile" class="form-label">Số nguyên tố
+								p:</label> <input type="number" name="p" id="inputPFile"
+								class="form-control" minlength="6" min="0" readonly>
+						</div>
+						
+						<div class="col-md-3">
+							<label for="inputHFile" class="form-label">h (tạo g):</label> <input
+								type="number" name="h" id="inputHFile" class="form-control"
+								readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputGFile" class="form-label">g:</label> <input
+								type="number" name="g" id="inputGFile" class="form-control"
+								min="1" readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputYFile" class="form-label">y = g^x mod p:</label>
+							<input type="number" name="y" id="inputYFile"
+								class="form-control" min="1" readonly>
+						</div>
+						<div class="col-md-3">
+							<label for="inputKFile" class="form-label">k:</label> <input
+								type="number" name="k" id="inputKFile" class="form-control"
+								min="1" readonly>
+						</div>
 					</div>
-					<div class="col-md-2">
-						<label for="inputQFile" class="form-label">Số nguyên tố q
-							sao cho (p-1) % q = 0:</label> <input type="number" name="q"
-							id="inputQFile" class="form-control" required minlength="6"
-							min="100000">
-					</div>
-					<div class="col-md-2">
-						<label for="inputXFile" class="form-label">Số nguyên x (1
-							<= x <= q-1)-private key)</label> <input type="number" name="x"
-							id="inputXFile" class="form-control" required min="1">
-					</div>
-					<div class="col-md-2">
-						<label for="inputGFile" class="form-label">Số nguyên g: (
-							Cơ sở tạo nhóm (generator))</label> <input type="number" name="g"
-							id="inputGFile" class="form-control"  required min="1">
-					</div>
-					<div class="col-md-2">
-						<label for="inputYFile" class="form-label">Khóa công khai
-							y = g^x mod p:</label> <input type="number" name="y" id="inputYFile"
-							class="form-control"  required min="1">
-					</div>
-					<div class="col-md-2">
-						<label for="inputKFile" class="form-label">Số nguyên k (1
-							<= k <= q-1):</label> <input type="number" name="k" id="inputKFile"
-							class="form-control" required min="1">
-					</div>
-					<div class="col-md-2 d-flex align-items-end">
-						<button type="button" class="btn btn-primary w-100"
-							onclick="generatePQXGKFile()">Sinh ngẫu nhiên</button>
+					<div class="row mt-3">
+						<div class="col-md-2">
+							<button type="button" class="btn btn-warning w-100"
+								onclick="autoFillParametersFile()">Tự động hoàn tất</button>
+						</div>
+						<div class="col-md-2">
+							<button type="button" class="btn btn-primary w-100"
+								onclick="generatePQXGKFile()">Sinh ngẫu nhiên</button>
+						</div>
+						<div class="col-md-2">
+							<button type="button" class="btn btn-danger w-100"
+								onclick="clearFileForm()">Xóa tất cả</button>
+						</div>
+
+
 					</div>
 				</div>
 				<div class="mb-3">
