@@ -21,12 +21,17 @@ public class FileUploadServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
-            // Lấy p, q, g, x từ form
+            response.setContentType("text/html;charset=UTF-8");
+            request.setCharacterEncoding("UTF-8");
+
+            String hamBam = request.getParameter("bam"); // Lấy thuật toán băm
+
+            // Lấy p, q, g, x, y, k từ form
             BigInteger p = new BigInteger(request.getParameter("p"));
             BigInteger q = new BigInteger(request.getParameter("q"));
             BigInteger g = new BigInteger(request.getParameter("g"));
-            BigInteger x = new BigInteger(request.getParameter("x")); // khóa bí mật
-            BigInteger y = new BigInteger(request.getParameter("y")); // public key
+            BigInteger x = new BigInteger(request.getParameter("x"));
+            BigInteger y = new BigInteger(request.getParameter("y"));
             BigInteger k = new BigInteger(request.getParameter("k"));
 
             // Đọc nội dung file upload
@@ -35,18 +40,19 @@ public class FileUploadServlet extends HttpServlet {
             InputStream fileContent = filePart.getInputStream();
             String content = readFileContent(fileName, fileContent);
 
-            // Ký nội dung
-            BigInteger[] signature = DSASignature.sign(content, p, q, g, x, k);
+            // Ký nội dung (có sử dụng thuật toán băm)
+            BigInteger[] signature = DSASignature.sign(content, p, q, g, x, k, hamBam);
             BigInteger r = signature[0];
             BigInteger s = signature[1];
 
             // Băm chữ ký
-            String signatureHash = DSASignature.hashSignature(r, s);
+            String signatureHash = DSASignature.hashSignature(r, s,hamBam);
 
             // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(content, p, q, g, y, r, s, signatureHash);
+            boolean isValid = DSASignature.verifyWithSignatureHash(content, p, q, g, y, r, s, signatureHash, hamBam);
 
             // Gửi dữ liệu sang JSP
+            request.setAttribute("bam", hamBam);
             request.setAttribute("message", content);
             request.setAttribute("r", r.toString());
             request.setAttribute("s", s.toString());
@@ -61,7 +67,6 @@ public class FileUploadServlet extends HttpServlet {
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("result.jsp");
             dispatcher.forward(request, response);
-
 
         } catch (Exception e) {
             throw new ServletException("Lỗi xử lý file hoặc tham số", e);

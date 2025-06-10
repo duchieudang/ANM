@@ -17,6 +17,7 @@ public class XacThucVanBan extends HttpServlet {
            request.setCharacterEncoding("UTF-8");
         try {
             // Lấy dữ liệu từ form
+            String hamBam = request.getParameter("bam");
             String message = request.getParameter("message");
         	BigInteger p = new BigInteger(request.getParameter("p"));
         	BigInteger q = new BigInteger(request.getParameter("q"));
@@ -30,9 +31,10 @@ public class XacThucVanBan extends HttpServlet {
             // Ký số
           
             // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(message, p, q, g, y, r, s, signatureHash);
+        	  boolean isValid = DSASignature.verifyWithSignatureHash(message, p, q, g, y, r, s, signatureHash,hamBam);
 
-            // Gửi dữ liệu sang JSP
+              // Gửi dữ liệu sang JSP
+              request.setAttribute("bam", hamBam);
             request.setAttribute("message", message);
             request.setAttribute("p", p.toString());
             request.setAttribute("q", q.toString());
@@ -44,9 +46,9 @@ public class XacThucVanBan extends HttpServlet {
             request.setAttribute("s", s.toString());
             request.setAttribute("signatureHash", signatureHash);
             if (isValid) {
-                request.setAttribute("xacThucKetQua", "Chữ ký HỢP LỆ.");
+                request.setAttribute("xacThucKetQua", "Chữ ký hợp lệ.");
             } else {
-                request.setAttribute("xacThucKetQua", "Chữ ký KHÔNG HỢP LỆ.");
+                request.setAttribute("xacThucKetQua", "Chữ ký không hợp lê");
             }
             request.getRequestDispatcher("result4.jsp").forward(request, response);
   

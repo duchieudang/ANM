@@ -17,6 +17,7 @@ public class SignatureServlet extends HttpServlet {
            request.setCharacterEncoding("UTF-8");
         try {
             // Lấy dữ liệu từ form
+            String hamBam = request.getParameter("bam");
             String message = request.getParameter("message");
             BigInteger p = new BigInteger(request.getParameter("p"));
             BigInteger q = new BigInteger(request.getParameter("q"));
@@ -26,17 +27,17 @@ public class SignatureServlet extends HttpServlet {
             BigInteger k = new BigInteger(request.getParameter("k")); // số ngẫu nhiên
 
             // Ký số
-            BigInteger[] signature = DSASignature.sign(message, p, q, g, x, k);
+            BigInteger[] signature = DSASignature.sign(message, p, q, g, x, k,hamBam);
             BigInteger r = signature[0];
             BigInteger s = signature[1];
 
             // Băm chữ ký
-            String signatureHash = DSASignature.hashSignature(r, s);
-
+            String signatureHash = DSASignature.hashSignature(r, s,hamBam);
             // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(message, p, q, g, y, r, s, signatureHash);
+            boolean isValid = DSASignature.verifyWithSignatureHash(message, p, q, g, y, r, s, signatureHash,hamBam);
 
             // Gửi dữ liệu sang JSP
+            request.setAttribute("bam", hamBam);
             request.setAttribute("message", message);
             request.setAttribute("p", p.toString());
             request.setAttribute("q", q.toString());

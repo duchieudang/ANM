@@ -36,7 +36,7 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label"><strong>Hash chữ ký (SHA-256 của r || s):</strong></label>
+            <label class="form-label"><strong>Hash chữ ký </strong></label>
             <pre class="bg-light border p-3">${signatureHash}</pre>
         </div>
 
@@ -49,7 +49,7 @@
             <input type="hidden" name="k" value="${k}">
             <input type="hidden" name="r" value="${r}">
             <input type="hidden" name="s" value="${s}">
-
+		<input type="hidden" name="bam" value="${bam}">
             <div class="mb-3">
                 <label for="signatureHash" class="form-label"><strong>Nhập chữ ký</strong></label>
                 <input type="text" name="signatureHash" id="signatureHash" class="form-control" value="${signatureHash}" required>
@@ -66,7 +66,7 @@
 
         <!-- Hiển thị kết quả xác thực -->
         <c:if test="${not empty xacThucKetQua}">
-            <div class="alert ${xacThucKetQua == 'Chữ ký HỢP LỆ.' ? 'alert-success' : 'alert-danger'} mt-4">
+            <div class="alert ${xacThucKetQua == 'Chữ ký hợp lệ.' ? 'alert-success' : 'alert-danger'} mt-4">
                 ${xacThucKetQua}
             </div>
         </c:if>

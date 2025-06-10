@@ -41,18 +41,20 @@ s
 
 			<div class="mb-3">
 				<label class="form-label"><strong>Hash chữ ký
-						(SHA-256 của r || s):</strong></label>
+						</strong></label>
 				<pre class="bg-light border p-3">${signatureHash}</pre>
 			</div>
 
 			<form action="xtupload" method="post" enctype="multipart/form-data">
-				<input type="hidden" name="p" value="${p}"> <input
-					type="hidden" name="q" value="${q}"> <input type="hidden"
-					name="g" value="${g}"> <input type="hidden" name="x"
-					value="${x}"> <input type="hidden" name="y" value="${y}">
-				<input type="hidden" name="k" value="${k}"> <input
-					type="hidden" name="r" value="${r}"> <input type="hidden"
-					name="s" value="${s}">
+		<input type="hidden" name="p" value="${p}">
+		<input type="hidden" name="q" value="${q}">
+		<input type="hidden" name="g" value="${g}">
+		<input type="hidden" name="x" value="${x}">
+		<input type="hidden" name="y" value="${y}">
+		<input type="hidden" name="k" value="${k}">
+		<input type="hidden" name="r" value="${r}">
+		<input type="hidden" name="s" value="${s}">
+		<input type="hidden" name="bam" value="${bam}">
 
 				<div class="mb-3">
 					<label for="signatureHash" class="form-label"><strong>Nhập

@@ -282,10 +282,24 @@
 		<div class="card shadow p-4 mb-4" id="textForm">
 			<h5 class="mb-3">Nhập văn bản cần ký:</h5>
 			<form action="sign" method="post">
+				<div class="mb-3">
+					<label for="hashFunctionText" class="form-label">Chọn hàm
+						băm</label> <select class="form-select" id="hashFunctionText" name="bam">
+						<option value="MD5">MD5</option>
+						<option value="SHA-1">SHA-1</option>
+						<option value="SHA-224">SHA-224</option>
+						<option value="SHA-256" selected>SHA-256</option>
+						<option value="SHA-384">SHA-384</option>
+						<option value="SHA-512">SHA-512</option>
+						<option value="SHA3-256">SHA3-256</option>
+						<option value="SHA3-512">SHA3-512</option>
+					</select>
+				</div>
+
 				<div class="row mb-3">
 					<div class="row">
-						
-				
+
+
 						<div class="col-md-3">
 							<label for="inputXText" class="form-label">x (private
 								key):</label> <input type="number" name="x" id="inputXText"
@@ -294,7 +308,7 @@
 						<div class="col-md-3">
 							<label for="inputQText" class="form-label">Số nguyên tố
 								q:</label> <input type="number" name="q" id="inputQText"
-								class="form-control" minlength="6" min="0"   >
+								class="form-control" minlength="6" min="0">
 						</div>
 						<div class="col-md-3">
 							<label for="inputPText" class="form-label">Số nguyên tố
@@ -351,9 +365,24 @@
 		<div class="card shadow p-4 mb-4" id="fileForm" style="display: none;">
 			<h5 class="mb-3">Chọn file cần ký:</h5>
 			<form action="upload" method="post" enctype="multipart/form-data">
+				<div class="mb-3">
+					<label for="hashFunctionText" class="form-label">Chọn hàm
+						băm</label> <select class="form-select" id="hashFunctionText" name="bam">
+						<option value="MD5">MD5</option>
+						<option value="SHA-1">SHA-1</option>
+						<option value="SHA-224">SHA-224</option>
+						<option value="SHA-256" selected>SHA-256</option>
+						<option value="SHA-384">SHA-384</option>
+						<option value="SHA-512">SHA-512</option>
+						<option value="SHA3-256">SHA3-256</option>
+						<option value="SHA3-512">SHA3-512</option>
+					</select>
+				</div>
+
+
 				<div class="row mb-3">
 					<div class="row">
-						
+
 						<div class="col-md-3">
 							<label for="inputXFile" class="form-label">x (private
 								key):</label> <input type="number" name="x" id="inputXFile"
@@ -369,7 +398,7 @@
 								p:</label> <input type="number" name="p" id="inputPFile"
 								class="form-control" minlength="6" min="0" readonly>
 						</div>
-						
+
 						<div class="col-md-3">
 							<label for="inputHFile" class="form-label">h (tạo g):</label> <input
 								type="number" name="h" id="inputHFile" class="form-control"

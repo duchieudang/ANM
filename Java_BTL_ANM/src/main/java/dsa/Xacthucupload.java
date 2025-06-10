@@ -21,6 +21,7 @@ public class Xacthucupload extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         try {
+        	String hamBam = request.getParameter("bam"); 
             // Lấy p, q, g, x từ form
         	BigInteger p = new BigInteger(request.getParameter("p"));
         	BigInteger q = new BigInteger(request.getParameter("q"));
@@ -44,8 +45,10 @@ public class Xacthucupload extends HttpServlet {
             // Băm chữ ký
 
             // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(content, p, q, g, y, r, s, signatureHash);
+            boolean isValid = DSASignature.verifyWithSignatureHash(content, p, q, g, y, r, s, signatureHash, hamBam);
 
+            // Gửi dữ liệu sang JSP
+            request.setAttribute("bam", hamBam);
             // Gửi dữ liệu sang JSP
             request.setAttribute("fileName", filePart.getSubmittedFileName());
 
@@ -62,9 +65,9 @@ public class Xacthucupload extends HttpServlet {
             request.setAttribute("signatureHash", signatureHash);
             request.setAttribute("status", isValid ? "Hợp lệ" : "Không hợp lệ");
             if (isValid) {
-                request.setAttribute("xacThucKetQua", "Chữ ký HỢP LỆ.");
+                request.setAttribute("xacThucKetQua", "Chữ ký hợp lệ.");
             } else {
-                request.setAttribute("xacThucKetQua", "Chữ ký KHÔNG HỢP LỆ.");
+                request.setAttribute("xacThucKetQua", "Chữ ký không hợp lệ.");
             }
             request.getRequestDispatcher("result2.jsp").forward(request, response);
   
