@@ -6,6 +6,12 @@
 <link
 	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
 	rel="stylesheet">
+<style>
+	input[readonly] {
+		background-color: #e9ecef; /* giống bg-light */
+		color: #495057;
+	}
+</style>
 
 <script>
 	function toggleForm() {
@@ -174,89 +180,99 @@
 		document.getElementById("inputHFile").value = h;
 	}
 
-	function autoFillParametersText() {
-		let p = parseInt(document.getElementById("inputPText").value) || null;
-		let q = parseInt(document.getElementById("inputQText").value) || null;
-		let x = parseInt(document.getElementById("inputXText").value) || Math.floor(Math.random() * 1000) + 1;
-		if (!q || !isPrime(q)) {
-			const randomNumber = Math.floor(Math.random() * 6) + 1;
-			const pq = generatePQ(randomNumber);
-		    if (!pq) return;
-		    q = pq.q;
-		    p = pq.p;
-		} else {
-		    // Nếu q là nguyên tố hợp lệ, tìm p sao cho p - 1 chia hết cho q và p là số nguyên tố
-		    for (let i = 2; i < 1000; i++) { // Giới hạn để tránh vòng lặp vô hạn
-		        let candidateP = q * i + 1;
-		        if (isPrime(candidateP)) {
-		            p = candidateP;
-		            break;
-		        }
-		    }
+	</script>
+<script>
+	function validateAndComputeText() {
+		const p = parseInt(document.getElementById("inputPText").value);
+		const q = parseInt(document.getElementById("inputQText").value);
+		const h = parseInt(document.getElementById("inputHText").value);
+		const x = parseInt(document.getElementById("inputXText").value);
+		const k = parseInt(document.getElementById("inputKText").value);
+
+		if (!isPrime(q)) {
+			alert("q không phải là số nguyên tố.");
+			return;
+		}
+		if (!isPrime(p)) {
+			alert("p không phải là số nguyên tố.");
+			return;
+		}
+		if ((p - 1) % q !== 0) {
+			alert("p không thỏa mãn điều kiện p - 1 chia hết cho q.");
+			return;
+		}
+		if (!(h > 1 && h < p - 1)) {
+			alert("h phải nằm trong khoảng (1, p-1).");
+			return;
+		}
+		if (!(x > 0 && x < q)) {
+			alert("x phải nằm trong khoảng (0, q).");
+			return;
+		}
+		if (!(k > 0 && k < q)) {
+			alert("k phải nằm trong khoảng (0, q).");
+			return;
 		}
 
-		
-		if (!document.getElementById("inputXText").value) {
-			document.getElementById("inputXText").value = x;
+		// Tính g
+		const g = modExp(h, (p - 1) / q, p);
+		if (g <= 1) {
+			alert("Giá trị g không hợp lệ (<=1). Vui lòng chọn h khác.");
+			return;
 		}
 
-		const gkResult = generateXGK(p, q);
-		if (!gkResult) return;
-
-		const { g, k, h } = gkResult;
+		// Tính y
 		const y = modExp(g, x, p);
 
-		document.getElementById("inputPText").value = p;
-		document.getElementById("inputQText").value = q;
+		// Gán vào form
 		document.getElementById("inputGText").value = g;
-		document.getElementById("inputKText").value = k;
 		document.getElementById("inputYText").value = y;
-		document.getElementById("inputHText").value = h;
 	}
 
+	function validateAndComputeFile() {
+		const p = parseInt(document.getElementById("inputPFile").value);
+		const q = parseInt(document.getElementById("inputQFile").value);
+		const h = parseInt(document.getElementById("inputHFile").value);
+		const x = parseInt(document.getElementById("inputXFile").value);
+		const k = parseInt(document.getElementById("inputKFile").value);
 
-	function autoFillParametersFile() {
-		let p = parseInt(document.getElementById("inputPFile").value) || null;
-		let q = parseInt(document.getElementById("inputQFile").value) || null;
-		let x = parseInt(document.getElementById("inputXFile").value) || Math.floor(Math.random() * 1000) + 1;
-		let g, y, k, h;
-        
-		if (!q || !isPrime(q)) {
-			const randomNumber = Math.floor(Math.random() * 6) + 1;
-			const pq = generatePQ(randomNumber);
-		    if (!pq) return;
-		    q = pq.q;
-		    p = pq.p;
-		} else {
-		    // Nếu q là nguyên tố hợp lệ, tìm p sao cho p - 1 chia hết cho q và p là số nguyên tố
-		    for (let i = 2; i < 1000; i++) { // Giới hạn để tránh vòng lặp vô hạn
-		        let candidateP = q * i + 1;
-		        if (isPrime(candidateP)) {
-		            p = candidateP;
-		            break;
-		        }
-		    }
+		if (!isPrime(q)) {
+			alert("q không phải là số nguyên tố.");
+			return;
+		}
+		if (!isPrime(p)) {
+			alert("p không phải là số nguyên tố.");
+			return;
+		}
+		if ((p - 1) % q !== 0) {
+			alert("p không thỏa mãn điều kiện p - 1 chia hết cho q.");
+			return;
+		}
+		if (!(h > 1 && h < p - 1)) {
+			alert("h phải nằm trong khoảng (1, p-1).");
+			return;
+		}
+		if (!(x > 0 && x < q)) {
+			alert("x phải nằm trong khoảng (0, q).");
+			return;
+		}
+		if (!(k > 0 && k < q)) {
+			alert("k phải nằm trong khoảng (0, q).");
+			return;
 		}
 
-		if (!document.getElementById("inputXFile").value) {
-			document.getElementById("inputXFile").value = x;
+		const g = modExp(h, (p - 1) / q, p);
+		if (g <= 1) {
+			alert("Giá trị g không hợp lệ (<=1). Vui lòng chọn h khác.");
+			return;
 		}
-
-		const gkResult = generateXGK(p, q);
-		if (!gkResult) return;
-		g = gkResult.g;
-		k = gkResult.k;
-		h = gkResult.h;
-		y = modExp(g, x, p);
-
-		document.getElementById("inputPFile").value = p;
-		document.getElementById("inputQFile").value = q;
+		const y = modExp(g, x, p);
 		document.getElementById("inputGFile").value = g;
-		document.getElementById("inputKFile").value = k;
 		document.getElementById("inputYFile").value = y;
-		document.getElementById("inputHFile").value = h;
 	}
 </script>
+
+
 </head>
 <body class="bg-light">
 	<div class="container mt-5">
@@ -282,23 +298,21 @@
 		<div class="card shadow p-4 mb-4" id="textForm">
 			<h5 class="mb-3">Nhập văn bản cần ký:</h5>
 			<form action="sign" method="post">
-				<div class="mb-3">
-					<label for="hashFunctionText" class="form-label">Chọn hàm
-						băm</label> <select class="form-select" id="hashFunctionText" name="bam">
-						<option value="MD5">MD5</option>
-						<option value="SHA-1">SHA-1</option>
-						<option value="SHA-224">SHA-224</option>
-						<option value="SHA-256" selected>SHA-256</option>
-						<option value="SHA-384">SHA-384</option>
-						<option value="SHA-512">SHA-512</option>
-						<option value="SHA3-256">SHA3-256</option>
-						<option value="SHA3-512">SHA3-512</option>
-					</select>
-				</div>
-
 				<div class="row mb-3">
 					<div class="row">
-
+						<div class="mb-3">
+							<label for="hashFunctionText" class="form-label">Chọn hàm
+								băm</label> <select class="form-select" id="hashFunctionText" name="bam">
+								<option value="MD5">MD5</option>
+								<option value="SHA-1">SHA-1</option>
+								<option value="SHA-224">SHA-224</option>
+								<option value="SHA-256" selected>SHA-256</option>
+								<option value="SHA-384">SHA-384</option>
+								<option value="SHA-512">SHA-512</option>
+								<option value="SHA3-256">SHA3-256</option>
+								<option value="SHA3-512">SHA3-512</option>
+							</select>
+						</div>
 
 						<div class="col-md-3">
 							<label for="inputXText" class="form-label">x (private
@@ -313,14 +327,20 @@
 						<div class="col-md-3">
 							<label for="inputPText" class="form-label">Số nguyên tố
 								p:</label> <input type="number" name="p" id="inputPText"
-								class="form-control" minlength="6" min="0" readonly>
+								class="form-control" minlength="6" min="0" >
 						</div>
 						<div class="col-md-3">
 							<label for="inputHText" class="form-label">h (tạo g):</label> <input
 								type="number" name="h" id="inputHText" class="form-control"
-								readonly>
+								>
 						</div>
+					
 						<div class="col-md-3">
+							<label for="inputKText" class="form-label">k:</label> <input
+								type="number" name="k" id="inputKText" class="form-control"
+								min="1" >
+						</div>
+							<div class="col-md-3">
 							<label for="inputGText" class="form-label">g:</label> <input
 								type="number" name="g" id="inputGText" class="form-control"
 								min="1" readonly>
@@ -330,17 +350,13 @@
 							<input type="number" name="y" id="inputYText"
 								class="form-control" min="1" readonly>
 						</div>
-						<div class="col-md-3">
-							<label for="inputKText" class="form-label">k:</label> <input
-								type="number" name="k" id="inputKText" class="form-control"
-								min="1" readonly>
-						</div>
 					</div>
 					<div class="row mt-3">
-						<div class="col-md-2 ">
+						<div class="col-md-2">
 							<button type="button" class="btn btn-warning w-100"
-								onclick="autoFillParametersText()">Tự động hoàn tất</button>
+								onclick="validateAndComputeText()">Kiểm tra & Tính toán</button>
 						</div>
+
 						<div class="col-md-2">
 							<button type="button" class="btn btn-primary w-100"
 								onclick="generatePQXGKText()">Sinh ngẫu nhiên</button>
@@ -378,8 +394,6 @@
 						<option value="SHA3-512">SHA3-512</option>
 					</select>
 				</div>
-
-
 				<div class="row mb-3">
 					<div class="row">
 
@@ -396,15 +410,21 @@
 						<div class="col-md-3">
 							<label for="inputPFile" class="form-label">Số nguyên tố
 								p:</label> <input type="number" name="p" id="inputPFile"
-								class="form-control" minlength="6" min="0" readonly>
+								class="form-control" minlength="6" min="0" >
 						</div>
 
 						<div class="col-md-3">
 							<label for="inputHFile" class="form-label">h (tạo g):</label> <input
 								type="number" name="h" id="inputHFile" class="form-control"
-								readonly>
+								>
 						</div>
+					
 						<div class="col-md-3">
+							<label for="inputKFile" class="form-label">k:</label> <input
+								type="number" name="k" id="inputKFile" class="form-control"
+								min="1" >
+						</div>
+							<div class="col-md-3">
 							<label for="inputGFile" class="form-label">g:</label> <input
 								type="number" name="g" id="inputGFile" class="form-control"
 								min="1" readonly>
@@ -414,17 +434,13 @@
 							<input type="number" name="y" id="inputYFile"
 								class="form-control" min="1" readonly>
 						</div>
-						<div class="col-md-3">
-							<label for="inputKFile" class="form-label">k:</label> <input
-								type="number" name="k" id="inputKFile" class="form-control"
-								min="1" readonly>
-						</div>
 					</div>
 					<div class="row mt-3">
 						<div class="col-md-2">
 							<button type="button" class="btn btn-warning w-100"
-								onclick="autoFillParametersFile()">Tự động hoàn tất</button>
+								onclick="validateAndComputeFile()">Kiểm tra & Tính toán</button>
 						</div>
+
 						<div class="col-md-2">
 							<button type="button" class="btn btn-primary w-100"
 								onclick="generatePQXGKFile()">Sinh ngẫu nhiên</button>

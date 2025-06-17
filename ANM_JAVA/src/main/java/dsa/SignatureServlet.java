@@ -34,11 +34,12 @@ public class SignatureServlet extends HttpServlet {
             // Băm chữ ký
             String signatureHash = DSASignature.hashSignature(r, s,hamBam);
             // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(message, p, q, g, y, r, s, signatureHash,hamBam);
-
+      
             // Gửi dữ liệu sang JSP
             request.setAttribute("bam", hamBam);
             request.setAttribute("message", message);
+            request.setAttribute("message2", message);
+
             request.setAttribute("p", p.toString());
             request.setAttribute("q", q.toString());
             request.setAttribute("g", g.toString());
@@ -48,7 +49,7 @@ public class SignatureServlet extends HttpServlet {
             request.setAttribute("r", r.toString());
             request.setAttribute("s", s.toString());
             request.setAttribute("signatureHash", signatureHash);
-            request.setAttribute("status", isValid ? "Hợp lệ" : "Không hợp lệ");
+    
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("result3.jsp");
             dispatcher.forward(request, response);

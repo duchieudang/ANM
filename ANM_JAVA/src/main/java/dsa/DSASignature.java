@@ -13,11 +13,11 @@ public class DSASignature {
         return new BigInteger(1, hashBytes);
     }
 
-    // Hàm băm SHA-1 từ r và s (kết hợp) để kiểm tra
-    public static String hashSignature(BigInteger r, BigInteger s,String algorithm) throws Exception {
-        MessageDigest sha1 = MessageDigest.getInstance(algorithm);
+    // Hàm băm SHA từ r và s (nếu vẫn cần dùng)
+    public static String hashSignature(BigInteger r, BigInteger s, String algorithm) throws Exception {
+        MessageDigest sha = MessageDigest.getInstance(algorithm);
         String input = r.toString() + s.toString();
-        byte[] hashBytes = sha1.digest(input.getBytes("UTF-8"));
+        byte[] hashBytes = sha.digest(input.getBytes("UTF-8"));
 
         StringBuilder hexString = new StringBuilder();
         for (byte b : hashBytes) {
@@ -62,7 +62,7 @@ public class DSASignature {
         return new BigInteger[]{r, s};
     }
 
-    // Chứng thực DSA
+    // Chứng thực DSA thông thường
     public static boolean verify(String message, BigInteger p, BigInteger q, BigInteger g,
                                  BigInteger y, BigInteger r, BigInteger s, String hashAlg) throws Exception {
         if (r.compareTo(BigInteger.ONE) < 0 || r.compareTo(q.subtract(BigInteger.ONE)) > 0) return false;
@@ -77,19 +77,25 @@ public class DSASignature {
         return v.equals(r);
     }
 
-    // Chứng thực DSA và kiểm tra hash chữ ký
-    public static boolean verifyWithSignatureHash(String message, BigInteger p, BigInteger q, BigInteger g,
-                                                  BigInteger y, BigInteger r, BigInteger s,
-                                                  String expectedSignatureHash, String hashAlg) throws Exception {
-        boolean verified = verify(message, p, q, g, y, r, s, hashAlg);
-        if (!verified) return false;
-
-        String hash = hashSignature(r, s,hashAlg);
-        return hash.equals(expectedSignatureHash);
+    // Hàm so sánh r
+    public static boolean verifyR(String message, BigInteger p, BigInteger q, BigInteger g,
+                                  BigInteger x, BigInteger expectedR, BigInteger k, String hashAlg) throws Exception {
+        BigInteger actualR = g.modPow(k, p).mod(q);
+        return actualR.equals(expectedR);
     }
 
+    // Hàm so sánh s
+    public static boolean verifyS(String message, BigInteger q, BigInteger x,
+                                  BigInteger expectedR, BigInteger expectedS, BigInteger k, String hashAlg) throws Exception {
+        BigInteger h = hashMessage(message, hashAlg);
+        BigInteger kInv = k.modInverse(q);
+        BigInteger actualS = (kInv.multiply(h.add(x.multiply(expectedR)))).mod(q);
+        return actualS.equals(expectedS);
+    }
+
+    // MAIN DEMO
     public static void main(String[] args) throws Exception {
-        // Tham số mẫu (nhỏ, không dùng thực tế)
+        // Tham số DSA mẫu
         BigInteger p = new BigInteger("7879");
         BigInteger q = new BigInteger("101");
         BigInteger h = new BigInteger("2");
@@ -102,12 +108,8 @@ public class DSASignature {
         BigInteger k = generateK(q);         // random k
 
         String message = "hello DSA";
-
-        // Có thể chọn: SHA-1, SHA-256, SHA-512
         String hashAlg = "SHA-512";
-        System.out.println(hashMessage(message, hashAlg));
-        System.out.println(hashMessage(message, "SHA-512"));
-        System.out.println(hashMessage(message, "SHA-1"));
+
         // Ký
         BigInteger[] signature = sign(message, p, q, g, x, k, hashAlg);
         BigInteger r = signature[0];
@@ -117,16 +119,16 @@ public class DSASignature {
         System.out.println("r = " + r);
         System.out.println("s = " + s);
 
-        // Băm chữ ký
-        String signatureHash = hashSignature(r, s,hashAlg);
-        System.out.println("Hash của chữ ký (r||s, SHA-1): " + signatureHash);
-
-        // Chứng thực chữ ký
+        // Kiểm tra chữ ký hợp lệ (cách chuẩn)
         boolean valid = verify(message, p, q, g, y, r, s, hashAlg);
         System.out.println("Chữ ký hợp lệ (thuật toán " + hashAlg + ")? " + valid);
 
-        // Chứng thực có kiểm tra hash
-        boolean validHash = verifyWithSignatureHash(message, p, q, g, y, r, s, signatureHash, hashAlg);
-        System.out.println("Chữ ký hợp lệ và trùng hash? " + validHash);
+        // So sánh riêng r
+        boolean isRValid = verifyR(message, p, q, g, x, r, k, hashAlg);
+        System.out.println("So sánh r đúng? " + isRValid);
+
+        // So sánh riêng s
+        boolean isSValid = verifyS(message, q, x, r, s, k, hashAlg);
+        System.out.println("So sánh s đúng? " + isSValid);
     }
 }

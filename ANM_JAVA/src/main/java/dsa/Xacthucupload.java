@@ -20,42 +20,47 @@ public class Xacthucupload extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        response.setContentType("text/html;charset=UTF-8");
+        request.setCharacterEncoding("UTF-8");
         try {
-        	String hamBam = request.getParameter("bam"); 
-            // Lấy p, q, g, x từ form
-        	BigInteger p = new BigInteger(request.getParameter("p"));
-        	BigInteger q = new BigInteger(request.getParameter("q"));
-        	BigInteger g = new BigInteger(request.getParameter("g"));
-        	BigInteger x = new BigInteger(request.getParameter("x")); 
-        	BigInteger y = new BigInteger(request.getParameter("y")); 
-        	BigInteger k = new BigInteger(request.getParameter("k"));
-        	BigInteger r = new BigInteger(request.getParameter("r"));
-        	BigInteger s = new BigInteger(request.getParameter("s"));
-        	 String signatureHash = request.getParameter("signatureHash");
-            
-            // Đọc nội dung file upload
+            String hamBam = request.getParameter("bam");
+       	 String content2 = request.getParameter("vbg");
+            // Lấy các tham số
+            BigInteger p = new BigInteger(request.getParameter("p"));
+            BigInteger q = new BigInteger(request.getParameter("q"));
+            BigInteger g = new BigInteger(request.getParameter("g"));
+            BigInteger x = new BigInteger(request.getParameter("x"));
+            BigInteger y = new BigInteger(request.getParameter("y"));
+            BigInteger k = new BigInteger(request.getParameter("k"));
+            BigInteger r = new BigInteger(request.getParameter("r"));
+            BigInteger s = new BigInteger(request.getParameter("s"));
+            String signatureHash = request.getParameter("signatureHash");
+            BigInteger r2 = new BigInteger(request.getParameter("r2"));
+            BigInteger s2 = new BigInteger(request.getParameter("s2"));
+            // Lấy file
             Part filePart = request.getPart("file");
             String fileName = filePart.getSubmittedFileName();
             InputStream fileContent = filePart.getInputStream();
             String content = readFileContent(fileName, fileContent);
 
-            // Ký nội dung
-        
+            // Kiểm tra xác thực chữ ký
+            boolean isValid = DSASignature.verify(content, p, q, g, y, r2, s2, hamBam);
 
-            // Băm chữ ký
-
-            // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(content, p, q, g, y, r, s, signatureHash, hamBam);
+            // So sánh riêng r
+         // So sánh trực tiếp r và r2, s và s2
+            boolean isRMatch = r.equals(r2);
+            boolean isSMatch = s.equals(s2);
+   
 
             // Gửi dữ liệu sang JSP
             request.setAttribute("bam", hamBam);
-            // Gửi dữ liệu sang JSP
             request.setAttribute("fileName", filePart.getSubmittedFileName());
-
-
-            request.setAttribute("message", content);
+            request.setAttribute("message", content2);
+            request.setAttribute("message2", content);
             request.setAttribute("r", r.toString());
             request.setAttribute("s", s.toString());
+            request.setAttribute("r2", r2.toString());
+            request.setAttribute("s2", s2.toString());
             request.setAttribute("p", p.toString());
             request.setAttribute("q", q.toString());
             request.setAttribute("g", g.toString());
@@ -64,14 +69,14 @@ public class Xacthucupload extends HttpServlet {
             request.setAttribute("k", k.toString());
             request.setAttribute("signatureHash", signatureHash);
             request.setAttribute("status", isValid ? "Hợp lệ" : "Không hợp lệ");
-            if (isValid) {
-                request.setAttribute("xacThucKetQua", "Chữ ký hợp lệ.");
-            } else {
-                request.setAttribute("xacThucKetQua", "Chữ ký không hợp lệ.");
-            }
-            request.getRequestDispatcher("result2.jsp").forward(request, response);
-  
 
+            // Kết quả xác thực và so sánh r, s
+            request.setAttribute("xacThucKetQua", isValid ? "Chữ ký hợp lệ." : "Văn bản đã bị thay đổi.");
+            request.setAttribute("rMatch", isRMatch ? "r khớp." : "r không khớp.");
+            request.setAttribute("sMatch", isSMatch ? "s khớp." : "s không khớp.");
+
+            // Chuyển đến trang kết quả
+            request.getRequestDispatcher("result.jsp").forward(request, response);
 
         } catch (Exception e) {
             throw new ServletException("Lỗi xử lý file hoặc tham số", e);

@@ -49,7 +49,7 @@ public class FileUploadServlet extends HttpServlet {
             String signatureHash = DSASignature.hashSignature(r, s,hamBam);
 
             // Xác thực chữ ký
-            boolean isValid = DSASignature.verifyWithSignatureHash(content, p, q, g, y, r, s, signatureHash, hamBam);
+     
 
             // Gửi dữ liệu sang JSP
             request.setAttribute("bam", hamBam);
@@ -63,7 +63,7 @@ public class FileUploadServlet extends HttpServlet {
             request.setAttribute("y", y.toString());
             request.setAttribute("k", k.toString());
             request.setAttribute("signatureHash", signatureHash);
-            request.setAttribute("status", isValid ? "Hợp lệ" : "Không hợp lệ");
+         
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("result.jsp");
             dispatcher.forward(request, response);
