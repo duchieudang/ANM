@@ -7,10 +7,10 @@
 	href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
 	rel="stylesheet">
 <style>
-	input[readonly] {
-		background-color: #e9ecef; /* giống bg-light */
-		color: #495057;
-	}
+input[readonly] {
+	background-color: #e9ecef; /* giống bg-light */
+	color: #495057;
+}
 </style>
 
 <script>
@@ -314,11 +314,7 @@
 							</select>
 						</div>
 
-						<div class="col-md-3">
-							<label for="inputXText" class="form-label">x (private
-								key):</label> <input type="number" name="x" id="inputXText"
-								class="form-control" min="1">
-						</div>
+
 						<div class="col-md-3">
 							<label for="inputQText" class="form-label">Số nguyên tố
 								q:</label> <input type="number" name="q" id="inputQText"
@@ -327,20 +323,28 @@
 						<div class="col-md-3">
 							<label for="inputPText" class="form-label">Số nguyên tố
 								p:</label> <input type="number" name="p" id="inputPText"
-								class="form-control" minlength="6" min="0" >
+								class="form-control" minlength="6" min="0">
+						</div>
+
+
+
+						<div class="col-md-3">
+							<label for="inputHText" class="form-label">h (tạo g) ,1
+								&lt; h &lt; p - 1:</label> <input type="number" name="h" id="inputHText"
+								class="form-control">
 						</div>
 						<div class="col-md-3">
-							<label for="inputHText" class="form-label">h (tạo g):</label> <input
-								type="number" name="h" id="inputHText" class="form-control"
-								>
+							<label for="inputXText" class="form-label">x (private
+								key), 0 &lt; x &lt; q:</label> <input type="number" name="x"
+								id="inputXText" class="form-control" min="1">
 						</div>
-					
 						<div class="col-md-3">
-							<label for="inputKText" class="form-label">k:</label> <input
-								type="number" name="k" id="inputKText" class="form-control"
-								min="1" >
+							<label for="inputKText" class="form-label">k (1 &lt; k
+								&lt; q):</label> <input type="number" name="k" id="inputKText"
+								class="form-control" min="2" max="100">
 						</div>
-							<div class="col-md-3">
+
+						<div class="col-md-3">
 							<label for="inputGText" class="form-label">g:</label> <input
 								type="number" name="g" id="inputGText" class="form-control"
 								min="1" readonly>
@@ -397,11 +401,7 @@
 				<div class="row mb-3">
 					<div class="row">
 
-						<div class="col-md-3">
-							<label for="inputXFile" class="form-label">x (private
-								key):</label> <input type="number" name="x" id="inputXFile"
-								class="form-control" min="1">
-						</div>
+
 						<div class="col-md-3">
 							<label for="inputQFile" class="form-label">Số nguyên tố
 								q:</label> <input type="number" name="q" id="inputQFile"
@@ -410,21 +410,25 @@
 						<div class="col-md-3">
 							<label for="inputPFile" class="form-label">Số nguyên tố
 								p:</label> <input type="number" name="p" id="inputPFile"
-								class="form-control" minlength="6" min="0" >
+								class="form-control" minlength="6" min="0">
 						</div>
 
 						<div class="col-md-3">
-							<label for="inputHFile" class="form-label">h (tạo g):</label> <input
-								type="number" name="h" id="inputHFile" class="form-control"
-								>
+							<label for="inputHFile" class="form-label">h (tạo g),1
+								&lt; h &lt; p - 1</label> <input type="number" name="h" id="inputHFile"
+								class="form-control">
 						</div>
-					
 						<div class="col-md-3">
-							<label for="inputKFile" class="form-label">k:</label> <input
-								type="number" name="k" id="inputKFile" class="form-control"
-								min="1" >
+							<label for="inputXFile" class="form-label">x (private
+								key), 0 &lt; x &lt; q:</label> <input type="number" name="x"
+								id="inputXFile" class="form-control" min="1">
 						</div>
-							<div class="col-md-3">
+						<div class="col-md-3">
+							<label for="inputKFile" class="form-label">k (1 &lt; k
+								&lt; q):</label> <input type="number" name="k" id="inputKFile"
+								class="form-control" min="1">
+						</div>
+						<div class="col-md-3">
 							<label for="inputGFile" class="form-label">g:</label> <input
 								type="number" name="g" id="inputGFile" class="form-control"
 								min="1" readonly>
