@@ -25,6 +25,8 @@ class DSAGui:
         self.g_var = tk.StringVar()
         self.x_var = tk.StringVar()
         self.y_var = tk.StringVar()
+        self.k_var = tk.StringVar()
+        self.hash_alg_var = tk.StringVar(value="SHA-256")  # ✅
 
         self.setup_widgets()
 
@@ -71,17 +73,23 @@ class DSAGui:
             ("h:", self.h_var),
             ("g:", self.g_var),
             ("x (private key):", self.x_var),
-            ("y (public key):", self.y_var)
+            ("y (public key):", self.y_var),
+            ("k (tùy chọn):", self.k_var),
         ]
 
         for i, (label, var) in enumerate(fields):
             ttk.Label(frame, text=label).grid(row=i, column=0, sticky="e", padx=5, pady=2)
             ttk.Entry(frame, textvariable=var, width=20).grid(row=i, column=1, sticky="w", padx=5, pady=2)
 
+        ttk.Label(frame, text="Hàm băm:").grid(row=len(fields), column=0, sticky="e", padx=5, pady=2)
+        ttk.Combobox(frame, textvariable=self.hash_alg_var,
+                     values=["SHA-1", "SHA-256", "SHA-512"],
+                     state="readonly", width=17).grid(row=len(fields), column=1, sticky="w", padx=5, pady=2)
+
         ttk.Button(frame, text="🎲 Sinh ngẫu nhiên", command=self.generate_all_params, style="Generate.TButton")\
-            .grid(row=len(fields), column=0, columnspan=2, pady=5, sticky="ew")
-        ttk.Button(frame, text="🔄 Reset", command=self.reset_params, style="Reset.TButton")\
             .grid(row=len(fields)+1, column=0, columnspan=2, pady=5, sticky="ew")
+        ttk.Button(frame, text="🔄 Reset", command=self.reset_params, style="Reset.TButton")\
+            .grid(row=len(fields)+2, column=0, columnspan=2, pady=5, sticky="ew")
 
     def create_sign_section(self, parent, column):
         frame = ttk.LabelFrame(parent, text="Ký nội dung", padding=10, style="Sign.TLabelframe")
@@ -140,23 +148,22 @@ class DSAGui:
             if file_path.endswith(".docx"):
                 doc = Document(file_path)
                 full_text = "\n".join([para.text for para in doc.paragraphs])
-                text_widget.delete("1.0", tk.END)
-                text_widget.insert(tk.END, full_text)
             elif file_path.endswith(".pdf"):
                 doc = fitz.open(file_path)
-                content = "\n".join([page.get_text() for page in doc])
-                text_widget.delete("1.0", tk.END)
-                text_widget.insert(tk.END, content)
+                full_text = "\n".join([page.get_text() for page in doc])
             elif file_path.endswith(".xlsx"):
                 wb = load_workbook(filename=file_path)
                 sheet = wb.active
-                content = ""
+                full_text = ""
                 for row in sheet.iter_rows(values_only=True):
-                    content += "\t".join([str(cell) if cell is not None else "" for cell in row]) + "\n"
-                text_widget.delete("1.0", tk.END)
-                text_widget.insert(tk.END, content)
+                    full_text += "\t".join([str(cell) if cell is not None else "" for cell in row]) + "\n"
             else:
-                messagebox.showwarning("Định dạng file", "Chỉ hỗ trợ file .docx, .pdf, .xlsx")
+                messagebox.showwarning("Định dạng file", "Chỉ hỗ trợ .docx, .pdf, .xlsx")
+                return
+
+            text_widget.delete("1.0", tk.END)
+            text_widget.insert(tk.END, full_text)
+
         except Exception as e:
             messagebox.showerror("Lỗi mở file", str(e))
 
@@ -169,6 +176,7 @@ class DSAGui:
         self.g = calculate_g(self.p, self.q, self.h)
         self.x = random.randint(1, self.q - 1)
         self.y = pow(self.g, self.x, self.p)
+        self.k = generate_k(self.q)
 
         self.p_var.set(str(self.p))
         self.q_var.set(str(self.q))
@@ -176,10 +184,12 @@ class DSAGui:
         self.g_var.set(str(self.g))
         self.x_var.set(str(self.x))
         self.y_var.set(str(self.y))
+        self.k_var.set(str(self.k))
 
     def reset_params(self):
-        for var in [self.p_var, self.q_var, self.h_var, self.g_var, self.x_var, self.y_var]:
+        for var in [self.p_var, self.q_var, self.h_var, self.g_var, self.x_var, self.y_var, self.k_var]:
             var.set("")
+        self.hash_alg_var.set("SHA-256")
         self.r = None
         self.s = None
         self.message = None
@@ -223,8 +233,16 @@ class DSAGui:
             if not is_prime(self.p) or not is_prime(self.q):
                 raise ValueError("p và q phải là số nguyên tố!")
 
-            self.k = generate_k(self.q)
-            self.r, self.s = sign(message, self.p, self.q, self.g, self.x, self.k)
+            k_input = self.k_var.get().strip()
+            if k_input:
+                self.k = int(k_input)
+                if not (0 < self.k < self.q):
+                    raise ValueError("k phải nằm trong khoảng (0, q)!")
+            else:
+                self.k = generate_k(self.q)
+
+            hash_alg = self.hash_alg_var.get()
+            self.r, self.s = sign(message, self.p, self.q, self.g, self.x, self.k, hash_alg)
             self.message = message
 
             self.signature_text.config(state='normal')
@@ -247,7 +265,6 @@ class DSAGui:
             self.y = int(self.y_var.get())
 
             errors = []
-
             if self.r != r2:
                 errors.append("⚠️ r đã bị thay đổi!")
             if self.s != s2:
@@ -255,7 +272,8 @@ class DSAGui:
             if self.message != message:
                 errors.append("⚠️ Văn bản đã bị thay đổi!")
 
-            is_valid = verify(message, self.p, self.q, self.g, self.y, r2, s2)
+            hash_alg = self.hash_alg_var.get()
+            is_valid = verify(message, self.p, self.q, self.g, self.y, r2, s2, hash_alg)
 
             if is_valid:
                 self.result_label.config(text="✅ Chữ ký hợp lệ", fg="green")
