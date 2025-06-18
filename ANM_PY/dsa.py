@@ -1,16 +1,21 @@
-# chuKyDsa.py
 import hashlib
 import random
 
-def hash_message(message):
-    sha256 = hashlib.sha256()
-    sha256.update(message.encode('utf-8'))
-    return int(sha256.hexdigest(), 16)
-
-def hash_signature(r, s):
-    sha256 = hashlib.sha256()
-    sha256.update((str(r) + str(s)).encode('utf-8'))
-    return sha256.hexdigest()
+def hash_message(message, hashAlg="SHA-256"):
+    hashAlg = hashAlg.upper()
+    if hashAlg == "SHA-1":
+        h = hashlib.sha1()
+    elif hashAlg == "SHA-256":
+        h = hashlib.sha256()
+    elif hashAlg == "SHA-384":
+        h = hashlib.sha384()
+    elif hashAlg == "SHA-512":
+        h = hashlib.sha512()
+    else:
+        raise ValueError("Thuật toán băm không hợp lệ.")
+    
+    h.update(message.encode('utf-8'))
+    return int(h.hexdigest(), 16)
 
 def calculate_g(p, q, h):
     return pow(h, (p - 1) // q, p)
@@ -34,22 +39,22 @@ def extended_gcd(a, b):
         g, y, x = extended_gcd(b % a, a)
         return (g, x - (b // a) * y, y)
 
-def sign(message, p, q, g, x, k):
+def sign(message, p, q, g, x, k, hashAlg="SHA-256"):
     r = pow(g, k, p) % q
     if r == 0:
         raise ValueError("r = 0, chọn k khác.")
-    h = hash_message(message)
+    h = hash_message(message, hashAlg)
     k_inv = modinv(k, q)
     s = (k_inv * (h + x * r)) % q
     if s == 0:
         raise ValueError("s = 0, chọn k khác.")
     return (r, s)
 
-def verify(message, p, q, g, y, r, s):
+def verify(message, p, q, g, y, r, s, hashAlg="SHA-256"):
     if not (0 < r < q) or not (0 < s < q):
         return False
     w = modinv(s, q)
-    h = hash_message(message)
+    h = hash_message(message, hashAlg)
     u1 = (h * w) % q
     u2 = (r * w) % q
     v = ((pow(g, u1, p) * pow(y, u2, p)) % p) % q

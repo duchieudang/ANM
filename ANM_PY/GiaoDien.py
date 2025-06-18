@@ -103,18 +103,32 @@ class DSAGui:
             ttk.Label(frame, text=label).grid(row=i, column=0, sticky="e", padx=5, pady=2)
             ttk.Entry(frame, textvariable=var, width=20).grid(row=i, column=1, sticky="w", padx=5, pady=2)
 
-        # Hiển thị g và y (chỉ đọc) với style Readonly.TEntry
+        # Hiển thị g và y (readonly)
         ttk.Label(frame, text="g=h^((p-1)/q) mod p:").grid(row=len(fields), column=0, sticky="e", padx=5, pady=2)
-        ttk.Entry(frame, textvariable=self.g_var, width=20, state="readonly", style="Readonly.TEntry").grid(row=len(fields), column=1, sticky="w", padx=5, pady=2)
-        ttk.Label(frame, text="public key y :").grid(row=len(fields) + 1, column=0, sticky="e", padx=5, pady=2)
-        ttk.Entry(frame, textvariable=self.y_var, width=20, state="readonly", style="Readonly.TEntry").grid(row=len(fields) + 1, column=1, sticky="w", padx=5, pady=2)
+        ttk.Entry(frame, textvariable=self.g_var, width=20, state="readonly", style="Readonly.TEntry")\
+            .grid(row=len(fields), column=1, sticky="w", padx=5, pady=2)
+        ttk.Label(frame, text="public key y :").grid(row=len(fields)+1, column=0, sticky="e", padx=5, pady=2)
+        ttk.Entry(frame, textvariable=self.y_var, width=20, state="readonly", style="Readonly.TEntry")\
+            .grid(row=len(fields)+1, column=1, sticky="w", padx=5, pady=2)
 
-        ttk.Button(frame, text="Sinh ngẫu nhiên", image=self.dice, compound="left", command=self.generate_all_params, style="Generate.TButton")\
-            .grid(row=len(fields) + 2, column=0, columnspan=2, pady=5, sticky="ew")
-        ttk.Button(frame, text="Reset", image=self.reset, compound="left", command=self.reset_params, style="Reset.TButton")\
-            .grid(row=len(fields) + 3, column=0, columnspan=2, pady=5, sticky="ew")
-        ttk.Button(frame, text="Kiểm tra", image=self.check, compound="left", command=self.check_params, style="Check.TButton")\
-            .grid(row=len(fields) + 4, column=0, columnspan=2, pady=5, sticky="ew")
+        # Thêm lựa chọn hàm băm bên dưới g và y
+        ttk.Label(frame, text="Thuật toán băm:").grid(row=len(fields)+2, column=0, sticky="e", padx=5, pady=2)
+        self.hash_alg_var = tk.StringVar(value="SHA-256")
+        hash_combo = ttk.Combobox(frame, textvariable=self.hash_alg_var,
+                                  values=["SHA-1", "SHA-256", "SHA-512"], state="readonly", width=17)
+        hash_combo.grid(row=len(fields)+2, column=1, sticky="w", padx=5, pady=2)
+
+        # Các nút chức năng
+        ttk.Button(frame, text="Sinh ngẫu nhiên", image=self.dice, compound="left",
+                   command=self.generate_all_params, style="Generate.TButton")\
+            .grid(row=len(fields)+3, column=0, columnspan=2, pady=5, sticky="ew")
+        ttk.Button(frame, text="Reset", image=self.reset, compound="left",
+                   command=self.reset_params, style="Reset.TButton")\
+            .grid(row=len(fields)+4, column=0, columnspan=2, pady=5, sticky="ew")
+        ttk.Button(frame, text="Kiểm tra", image=self.check, compound="left",
+                   command=self.check_params, style="Check.TButton")\
+            .grid(row=len(fields)+5, column=0, columnspan=2, pady=5, sticky="ew")
+
 
     def create_sign_section(self, parent, column):
         frame = ttk.LabelFrame(parent, text="Ký nội dung", padding=12, style="Sign.TLabelframe")
@@ -311,15 +325,21 @@ class DSAGui:
             if not is_prime(self.p) or not is_prime(self.q):
                 raise ValueError("p và q phải là số nguyên tố!")
 
-            self.r, self.s = sign(message, self.p, self.q, self.g, self.x, self.k)
+            # Lấy thuật toán băm được chọn
+            hash_alg = self.hash_alg_var.get()
+
+            # Ký với thuật toán băm
+            self.r, self.s = sign(message, self.p, self.q, self.g, self.x, self.k, hashAlg=hash_alg)
             self.message = message
 
             self.signature_text.config(state='normal')
             self.signature_text.delete("1.0", tk.END)
             self.signature_text.insert(tk.END, f"r = {self.r}\ns = {self.s}")
             self.signature_text.config(state='disabled')
+
         except Exception as e:
             messagebox.showerror("Lỗi khi ký", str(e))
+
 
     def verify_signature(self):
         try:
@@ -333,6 +353,9 @@ class DSAGui:
             self.g = int(self.g_var.get())
             self.y = int(self.y_var.get())
 
+            # Lấy thuật toán băm được chọn
+            hash_alg = self.hash_alg_var.get()
+
             errors = []
 
             if self.r != r2:
@@ -345,7 +368,8 @@ class DSAGui:
                 errors.append("⚠️ Văn bản đã bị thay đổi!")
                 self.result_label.config(text="❌ Văn bản đã bị thay đổi", fg="red")
 
-            is_valid = verify(message, self.p, self.q, self.g, self.y, r2, s2)
+            # Xác thực chữ ký với thuật toán băm đã chọn
+            is_valid = verify(message, self.p, self.q, self.g, self.y, r2, s2, hashAlg=hash_alg)
 
             if is_valid:
                 self.result_label.config(text="✅ Chữ ký khớp, văn bản toàn vẹn", fg="green")
@@ -354,8 +378,10 @@ class DSAGui:
 
             if errors:
                 messagebox.showwarning("Cảnh báo", "\n".join(errors))
+
         except Exception as e:
             messagebox.showerror("Lỗi khi xác thực", str(e))
+
 
 
 if __name__ == "__main__":
