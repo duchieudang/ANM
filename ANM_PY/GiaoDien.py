@@ -5,7 +5,8 @@ import fitz  # PyMuPDF
 from openpyxl import load_workbook
 import random
 from dsa import is_prime, calculate_g, generate_k, sign, verify
-
+from PIL import Image, ImageTk
+import os  # Thêm để debug đường dẫn
 
 class DSAGui:
     def __init__(self, root):
@@ -14,6 +15,7 @@ class DSAGui:
         root.geometry("1200x750")
 
         self.setup_style()
+        self.load_icons()  # Nạp icon
 
         self.r = None
         self.s = None
@@ -22,34 +24,57 @@ class DSAGui:
         self.p_var = tk.StringVar()
         self.q_var = tk.StringVar()
         self.h_var = tk.StringVar()
-        self.g_var = tk.StringVar()
-        self.x_var = tk.StringVar()
-        self.y_var = tk.StringVar()
         self.k_var = tk.StringVar()
-        self.hash_alg_var = tk.StringVar(value="SHA-256")  # ✅
+        self.x_var = tk.StringVar()
+        self.g_var = tk.StringVar()
+        self.y_var = tk.StringVar()
 
         self.setup_widgets()
 
     def setup_style(self):
         style = ttk.Style()
         style.theme_use("clam")
-        style.configure("TLabel", font=('Segoe UI', 10), foreground="#333")
-        style.configure("TEntry", font=('Segoe UI', 10), fieldbackground="#fff")
+        style.configure("TLabel", font=('Segoe UI', 10), foreground="black")
+        style.configure("TEntry", font=('Segoe UI', 10), fieldbackground="white")
         style.configure("TFrame", background="#f5f5dc")
-        style.configure("TLabelframe.Label", font=('Segoe UI', 11, 'bold'), foreground="#333")
+        style.configure("TLabelframe.Label", font=('Segoe UI', 11, 'bold'), foreground="black")
 
         style.configure("Param.TLabelframe", background="#e6e6fa")
         style.configure("Sign.TLabelframe", background="#d4edda")
-        style.configure("Verify.TLabelframe", background="#ffe5d9")
+        style.configure("Verify.TLabelframe", background="#f5f5dc")
 
-        style.configure("Generate.TButton", font=('Segoe UI', 10), background="#e2e3f5", foreground="#333", padding=6)
-        style.map("Generate.TButton", background=[("active", "#d1d2f0")])
-        style.configure("Reset.TButton", font=('Segoe UI', 10), background="#f8d7da", foreground="#333", padding=6)
-        style.map("Reset.TButton", background=[("active", "#f5c6cb")])
-        style.configure("Sign.TButton", font=('Segoe UI', 10), background="#c3e6cb", foreground="#333", padding=6)
-        style.map("Sign.TButton", background=[("active", "#b1d8b7")])
-        style.configure("Verify.TButton", font=('Segoe UI', 10), background="#ffddd2", foreground="#333", padding=6)
-        style.map("Verify.TButton", background=[("active", "#ffccb3")])
+        # Custom styles for all buttons with lighter colors
+        style.configure("Generate.TButton", font=('Segoe UI', 11), background="#66BB6A", foreground="black", padding=5)
+        style.map("Generate.TButton", background=[("active", "#43A047")])
+        style.configure("Reset.TButton", font=('Segoe UI', 11), background="#EF9A9A", foreground="black", padding=5)
+        style.map("Reset.TButton", background=[("active", "#AD1457")])
+        style.configure("Check.TButton", font=('Segoe UI', 11), background="#42A5F5", foreground="black", padding=5)
+        style.map("Check.TButton", background=[("active", "#1976D2")])
+        style.configure("SignOpen.TButton", font=('Segoe UI', 11), background="#66BB6A", foreground="black", padding=5)
+        style.map("SignOpen.TButton", background=[("active", "#43A047")])
+        style.configure("SignCreate.TButton", font=('Segoe UI', 11), background="#EF9A9A", foreground="black", padding=5)
+        style.map("SignCreate.TButton", background=[("active", "#AD1457")])
+        style.configure("SignTransfer.TButton", font=('Segoe UI', 11), background="#fccc7e", foreground="black", padding=5)
+        style.map("SignTransfer.TButton", background=[("active", "#F57C00")])
+        style.configure("VerifyOpen.TButton", font=('Segoe UI', 11), background="#42A5F5", foreground="black", padding=5)
+        style.map("VerifyOpen.TButton", background=[("active", "#1976D2")])
+        style.configure("Verify.TButton", font=('Segoe UI', 11), background="#fccc7e", foreground="black", padding=5)
+        style.map("Verify.TButton", background=[("active", "#F57C00")])
+
+        # Custom style for readonly entries (g and y) with darker gray background
+        style.configure("Readonly.TEntry", fieldbackground="#A9A9A9", foreground="black")
+
+    def load_icons(self):
+        current_dir = os.path.dirname(__file__)
+        image_dir = os.path.join(current_dir, "Anh")
+
+        self.reset = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "reset.png")).resize((25, 25), Image.LANCZOS))
+        self.dice = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "dice.png")).resize((25, 25), Image.LANCZOS))
+        self.check = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "check1.png")).resize((25, 25), Image.LANCZOS))
+        self.book = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "book.png")).resize((30, 30), Image.LANCZOS))
+        self.arrow = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "arrow.png")).resize((30, 30), Image.LANCZOS))
+        self.write = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "check.png")).resize((30, 30), Image.LANCZOS))
+
 
     def setup_widgets(self):
         main_frame = ttk.Frame(self.root)
@@ -64,56 +89,57 @@ class DSAGui:
         self.create_verify_section(main_frame, 2)
 
     def create_param_section(self, parent, column):
-        frame = ttk.LabelFrame(parent, text="Tham số DSA", padding=10, style="Param.TLabelframe")
+        frame = ttk.LabelFrame(parent, text="Tham số DSA", padding=12, style="Param.TLabelframe")
         frame.grid(row=0, column=column, sticky="nsew", padx=5, pady=5)
 
         fields = [
-            ("p:", self.p_var),
-            ("q:", self.q_var),
-            ("h:", self.h_var),
-            ("g:", self.g_var),
+            ("số nguyên tố p:", self.p_var),
+            ("số nguyên tố q:", self.q_var),
+            ("h ( tạo g):", self.h_var),
+            ("k (0<k<q):", self.k_var),
             ("x (private key):", self.x_var),
-            ("y (public key):", self.y_var),
-            ("k (tùy chọn):", self.k_var),
         ]
 
         for i, (label, var) in enumerate(fields):
             ttk.Label(frame, text=label).grid(row=i, column=0, sticky="e", padx=5, pady=2)
             ttk.Entry(frame, textvariable=var, width=20).grid(row=i, column=1, sticky="w", padx=5, pady=2)
 
-        ttk.Label(frame, text="Hàm băm:").grid(row=len(fields), column=0, sticky="e", padx=5, pady=2)
-        ttk.Combobox(frame, textvariable=self.hash_alg_var,
-                     values=["SHA-1", "SHA-256", "SHA-512"],
-                     state="readonly", width=17).grid(row=len(fields), column=1, sticky="w", padx=5, pady=2)
+        # Hiển thị g và y (chỉ đọc) với style Readonly.TEntry
+        ttk.Label(frame, text="g=h^((p-1)/q) mod p:").grid(row=len(fields), column=0, sticky="e", padx=5, pady=2)
+        ttk.Entry(frame, textvariable=self.g_var, width=20, state="readonly", style="Readonly.TEntry").grid(row=len(fields), column=1, sticky="w", padx=5, pady=2)
+        ttk.Label(frame, text="y (public key):").grid(row=len(fields) + 1, column=0, sticky="e", padx=5, pady=2)
+        ttk.Entry(frame, textvariable=self.y_var, width=20, state="readonly", style="Readonly.TEntry").grid(row=len(fields) + 1, column=1, sticky="w", padx=5, pady=2)
 
-        ttk.Button(frame, text="🎲 Sinh ngẫu nhiên", command=self.generate_all_params, style="Generate.TButton")\
-            .grid(row=len(fields)+1, column=0, columnspan=2, pady=5, sticky="ew")
-        ttk.Button(frame, text="🔄 Reset", command=self.reset_params, style="Reset.TButton")\
-            .grid(row=len(fields)+2, column=0, columnspan=2, pady=5, sticky="ew")
+        ttk.Button(frame, text="Sinh ngẫu nhiên", image=self.dice, compound="left", command=self.generate_all_params, style="Generate.TButton")\
+            .grid(row=len(fields) + 2, column=0, columnspan=2, pady=5, sticky="ew")
+        ttk.Button(frame, text="Reset", image=self.reset, compound="left", command=self.reset_params, style="Reset.TButton")\
+            .grid(row=len(fields) + 3, column=0, columnspan=2, pady=5, sticky="ew")
+        ttk.Button(frame, text="Kiểm tra", image=self.check, compound="left", command=self.check_params, style="Check.TButton")\
+            .grid(row=len(fields) + 4, column=0, columnspan=2, pady=5, sticky="ew")
 
     def create_sign_section(self, parent, column):
-        frame = ttk.LabelFrame(parent, text="Ký nội dung", padding=10, style="Sign.TLabelframe")
+        frame = ttk.LabelFrame(parent, text="Ký nội dung", padding=12, style="Sign.TLabelframe")
         frame.grid(row=0, column=column, sticky="nsew", padx=5, pady=5)
 
-        ttk.Button(frame, text="📂 Mở file (Word, PDF, Excel)", command=lambda: self.load_file(self.text_input)).pack(pady=5, fill='x')
+        ttk.Button(frame, text="Mở file (Word, PDF, Excel)", image=self.book, compound="left",
+                   command=lambda: self.load_file(self.text_input), style="SignOpen.TButton").pack(pady=5, fill='x')
 
         ttk.Label(frame, text="Nội dung cần ký:").pack(anchor='w')
         self.text_input = tk.Text(frame, height=10, wrap='word')
         self.text_input.pack(fill="both", expand=True, pady=5)
 
-        ttk.Button(frame, text="✍️ Tạo chữ ký", command=self.sign_message, style="Sign.TButton").pack(pady=5, fill='x')
-        ttk.Button(frame, text="➡️ Chuyển sang xác thực", command=self.transfer_to_verify, style="Verify.TButton")\
-            .pack(pady=5, fill='x')
+        ttk.Button(frame, text="Tạo chữ ký", image=self.write, compound="left", command=self.sign_message, style="SignCreate.TButton").pack(pady=5, fill='x')
+        ttk.Button(frame, text="Chuyển sang xác thực", image=self.arrow, compound="left", command=self.transfer_to_verify, style="SignTransfer.TButton").pack(pady=5, fill='x')
 
         ttk.Label(frame, text="Kết quả (r, s):").pack(anchor='w')
         self.signature_text = tk.Text(frame, height=5, wrap='word', state='disabled')
         self.signature_text.pack(fill="both", expand=True, pady=5)
 
     def create_verify_section(self, parent, column):
-        frame = ttk.LabelFrame(parent, text="Xác thực chữ ký", padding=10, style="Verify.TLabelframe")
+        frame = ttk.LabelFrame(parent, text="Xác thực chữ ký", padding=12, style="Verify.TLabelframe")
         frame.grid(row=0, column=column, sticky="nsew", padx=5, pady=5)
 
-        ttk.Button(frame, text="📂 Mở file (Word, PDF, Excel)", command=lambda: self.load_file(self.verify_text_input)).pack(pady=5, fill='x')
+        ttk.Button(frame, text="Mở file (Word, PDF, Excel)", image=self.book, compound="left", command=lambda: self.load_file(self.verify_text_input), style="VerifyOpen.TButton").pack(pady=5, fill='x')
 
         ttk.Label(frame, text="Nội dung cần xác thực:").pack(anchor='w')
         self.verify_text_input = tk.Text(frame, height=10, wrap='word')
@@ -127,7 +153,7 @@ class DSAGui:
         self.s_entry = ttk.Entry(frame)
         self.s_entry.pack(fill='x', pady=2)
 
-        ttk.Button(frame, text="✅ Xác thực", command=self.verify_signature, style="Verify.TButton")\
+        ttk.Button(frame, text="Xác thực", image=self.check, compound="left", command=self.verify_signature, style="Verify.TButton")\
             .pack(pady=10, fill='x')
         self.result_label = tk.Label(frame, text="", font=('Segoe UI', 11, 'bold'), fg="#333")
         self.result_label.pack(fill='x')
@@ -148,22 +174,23 @@ class DSAGui:
             if file_path.endswith(".docx"):
                 doc = Document(file_path)
                 full_text = "\n".join([para.text for para in doc.paragraphs])
+                text_widget.delete("1.0", tk.END)
+                text_widget.insert(tk.END, full_text)
             elif file_path.endswith(".pdf"):
                 doc = fitz.open(file_path)
-                full_text = "\n".join([page.get_text() for page in doc])
+                content = "\n".join([page.get_text() for page in doc])
+                text_widget.delete("1.0", tk.END)
+                text_widget.insert(tk.END, content)
             elif file_path.endswith(".xlsx"):
                 wb = load_workbook(filename=file_path)
                 sheet = wb.active
-                full_text = ""
+                content = ""
                 for row in sheet.iter_rows(values_only=True):
-                    full_text += "\t".join([str(cell) if cell is not None else "" for cell in row]) + "\n"
+                    content += "\t".join([str(cell) if cell is not None else "" for cell in row]) + "\n"
+                text_widget.delete("1.0", tk.END)
+                text_widget.insert(tk.END, content)
             else:
-                messagebox.showwarning("Định dạng file", "Chỉ hỗ trợ .docx, .pdf, .xlsx")
-                return
-
-            text_widget.delete("1.0", tk.END)
-            text_widget.insert(tk.END, full_text)
-
+                messagebox.showwarning("Định dạng file", "Chỉ hỗ trợ file .docx, .pdf, .xlsx")
         except Exception as e:
             messagebox.showerror("Lỗi mở file", str(e))
 
@@ -176,20 +203,18 @@ class DSAGui:
         self.g = calculate_g(self.p, self.q, self.h)
         self.x = random.randint(1, self.q - 1)
         self.y = pow(self.g, self.x, self.p)
-        self.k = generate_k(self.q)
 
         self.p_var.set(str(self.p))
         self.q_var.set(str(self.q))
         self.h_var.set(str(self.h))
-        self.g_var.set(str(self.g))
+        self.k_var.set(str(generate_k(self.q)))  # Thêm k ngẫu nhiên
         self.x_var.set(str(self.x))
+        self.g_var.set(str(self.g))
         self.y_var.set(str(self.y))
-        self.k_var.set(str(self.k))
 
     def reset_params(self):
-        for var in [self.p_var, self.q_var, self.h_var, self.g_var, self.x_var, self.y_var, self.k_var]:
+        for var in [self.p_var, self.q_var, self.h_var, self.k_var, self.x_var, self.g_var, self.y_var]:
             var.set("")
-        self.hash_alg_var.set("SHA-256")
         self.r = None
         self.s = None
         self.message = None
@@ -201,6 +226,35 @@ class DSAGui:
         self.verify_text_input.delete("1.0", tk.END)
         self.r_entry.delete(0, tk.END)
         self.s_entry.delete(0, tk.END)
+
+    def check_params(self):
+        try:
+            p = int(self.p_var.get()) if self.p_var.get() else 0
+            q = int(self.q_var.get()) if self.q_var.get() else 0
+            h = int(self.h_var.get()) if self.h_var.get() else 0
+            k = int(self.k_var.get()) if self.k_var.get() else 0
+            x = int(self.x_var.get()) if self.x_var.get() else 0
+
+            if not is_prime(p):
+                messagebox.showerror("Lỗi", "p không phải là số nguyên tố!")
+                return
+            if not is_prime(q):
+                messagebox.showerror("Lỗi", "q không phải là số nguyên tố!")
+                return
+
+            # Tính g
+            g = calculate_g(p, q, h)
+            self.g_var.set(str(g))
+
+            # Tính y
+            y = pow(g, x, p)
+            self.y_var.set(str(y))
+
+            messagebox.showinfo("Thành công", "Kiểm tra thành công! Các tham số g và y đã được tính toán.")
+        except ValueError:
+            messagebox.showerror("Lỗi", "Vui lòng nhập đầy đủ và đúng định dạng số nguyên!")
+        except Exception as e:
+            messagebox.showerror("Lỗi", str(e))
 
     def transfer_to_verify(self):
         if self.r is None or self.s is None or self.message is None:
@@ -228,21 +282,13 @@ class DSAGui:
             self.h = int(self.h_var.get())
             self.g = int(self.g_var.get())
             self.x = int(self.x_var.get())
+            self.k = int(self.k_var.get())
             self.y = int(self.y_var.get())
 
             if not is_prime(self.p) or not is_prime(self.q):
                 raise ValueError("p và q phải là số nguyên tố!")
 
-            k_input = self.k_var.get().strip()
-            if k_input:
-                self.k = int(k_input)
-                if not (0 < self.k < self.q):
-                    raise ValueError("k phải nằm trong khoảng (0, q)!")
-            else:
-                self.k = generate_k(self.q)
-
-            hash_alg = self.hash_alg_var.get()
-            self.r, self.s = sign(message, self.p, self.q, self.g, self.x, self.k, hash_alg)
+            self.r, self.s = sign(message, self.p, self.q, self.g, self.x, self.k)
             self.message = message
 
             self.signature_text.config(state='normal')
@@ -265,20 +311,23 @@ class DSAGui:
             self.y = int(self.y_var.get())
 
             errors = []
+
             if self.r != r2:
                 errors.append("⚠️ r đã bị thay đổi!")
+                self.result_label.config(text="❌ Chữ ký không khớp", fg="red")
             if self.s != s2:
                 errors.append("⚠️ s đã bị thay đổi!")
+                self.result_label.config(text="❌ Chữ ký không khớp", fg="red")
             if self.message != message:
                 errors.append("⚠️ Văn bản đã bị thay đổi!")
+                self.result_label.config(text="❌ Văn bản đã bị thay đổi", fg="red")
 
-            hash_alg = self.hash_alg_var.get()
-            is_valid = verify(message, self.p, self.q, self.g, self.y, r2, s2, hash_alg)
+            is_valid = verify(message, self.p, self.q, self.g, self.y, r2, s2)
 
             if is_valid:
-                self.result_label.config(text="✅ Chữ ký hợp lệ", fg="green")
-            else:
-                self.result_label.config(text="❌ Chữ ký không hợp lệ", fg="red")
+                self.result_label.config(text="✅ Chữ ký khớp, văn bản toàn vẹn", fg="green")
+            # else:
+            #     self.result_label.config(text="❌ Chữ ký không hợp lệ", fg="red")
 
             if errors:
                 messagebox.showwarning("Cảnh báo", "\n".join(errors))
