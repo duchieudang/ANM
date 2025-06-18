@@ -75,7 +75,6 @@ class DSAGui:
         self.arrow = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "arrow.png")).resize((30, 30), Image.LANCZOS))
         self.write = ImageTk.PhotoImage(Image.open(os.path.join(image_dir, "check.png")).resize((30, 30), Image.LANCZOS))
 
-
     def setup_widgets(self):
         main_frame = ttk.Frame(self.root)
         main_frame.pack(expand=True, fill='both', padx=5, pady=5)
@@ -95,9 +94,9 @@ class DSAGui:
         fields = [
             ("số nguyên tố p:", self.p_var),
             ("số nguyên tố q:", self.q_var),
-            ("h ( tạo g):", self.h_var),
+            ("h (1<h<p-1):", self.h_var),
             ("k (0<k<q):", self.k_var),
-            ("x (private key):", self.x_var),
+            ("private key x(0<x<q):", self.x_var),
         ]
 
         for i, (label, var) in enumerate(fields):
@@ -107,7 +106,7 @@ class DSAGui:
         # Hiển thị g và y (chỉ đọc) với style Readonly.TEntry
         ttk.Label(frame, text="g=h^((p-1)/q) mod p:").grid(row=len(fields), column=0, sticky="e", padx=5, pady=2)
         ttk.Entry(frame, textvariable=self.g_var, width=20, state="readonly", style="Readonly.TEntry").grid(row=len(fields), column=1, sticky="w", padx=5, pady=2)
-        ttk.Label(frame, text="y (public key):").grid(row=len(fields) + 1, column=0, sticky="e", padx=5, pady=2)
+        ttk.Label(frame, text="public key y :").grid(row=len(fields) + 1, column=0, sticky="e", padx=5, pady=2)
         ttk.Entry(frame, textvariable=self.y_var, width=20, state="readonly", style="Readonly.TEntry").grid(row=len(fields) + 1, column=1, sticky="w", padx=5, pady=2)
 
         ttk.Button(frame, text="Sinh ngẫu nhiên", image=self.dice, compound="left", command=self.generate_all_params, style="Generate.TButton")\
@@ -235,18 +234,42 @@ class DSAGui:
             k = int(self.k_var.get()) if self.k_var.get() else 0
             x = int(self.x_var.get()) if self.x_var.get() else 0
 
-            if not is_prime(p):
-                messagebox.showerror("Lỗi", "p không phải là số nguyên tố!")
-                return
+            # Kiểm tra q là số nguyên tố
             if not is_prime(q):
                 messagebox.showerror("Lỗi", "q không phải là số nguyên tố!")
                 return
 
-            # Tính g
+            # Kiểm tra p là số nguyên tố và (p - 1) chia hết cho q
+            if not is_prime(p):
+                messagebox.showerror("Lỗi", "p không phải là số nguyên tố!")
+                return
+            if (p - 1) % q != 0:
+                messagebox.showerror("Lỗi", "p phải thỏa mãn (p - 1) chia hết cho q!")
+                return
+
+            # Kiểm tra h nằm trong khoảng (1, p - 1)
+            if h <= 1 or h >= p - 1:
+                messagebox.showerror("Lỗi", "h phải là số nguyên nằm trong khoảng (1, p - 1)!")
+                return
+
+            # Tính g và kiểm tra g > 1
             g = calculate_g(p, q, h)
+            if g <= 1:
+                messagebox.showerror("Lỗi", "g phải lớn hơn 1!")
+                return
             self.g_var.set(str(g))
 
-            # Tính y
+            # Kiểm tra x nằm trong khoảng (0, q)
+            if x <= 0 or x >= q:
+                messagebox.showerror("Lỗi", "x (khóa bí mật) phải nằm trong khoảng (0, q)!")
+                return
+
+            # Kiểm tra k nằm trong khoảng (0, q)
+            if k <= 0 or k >= q:
+                messagebox.showerror("Lỗi", "k (số ngẫu nhiên bí mật) phải nằm trong khoảng (0, q)!")
+                return
+
+            # Tính y và gán giá trị
             y = pow(g, x, p)
             self.y_var.set(str(y))
 
